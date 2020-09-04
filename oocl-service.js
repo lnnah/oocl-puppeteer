@@ -72,6 +72,13 @@ class OOCLService {
     await page.mouse.up()
     // Done simulate
 
+    /*Getting data here if captcha by passed
+
+      ...do something
+
+    End getting data*/
+    
+
     // Close pages and finally close the browser
     await secondPage.close()
     await page.close()
