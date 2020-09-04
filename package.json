@@ -13,6 +13,7 @@
   "author": "nah",
   "license": "ISC",
   "dependencies": {
+    "chrome-aws-lambda": "^5.2.1",
     "puppeteer": "^5.2.1"
   }
 }
