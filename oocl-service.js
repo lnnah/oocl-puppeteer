@@ -1,4 +1,5 @@
 const chromium = require('chrome-aws-lambda')
+
 const puppeteer = chromium.puppeteer
 
 class OOCLService {
@@ -44,9 +45,8 @@ class OOCLService {
     await page.setUserAgent(this.USER_AGENT)
     await page.goto(this.MAIN_URL)
 
-    this.cookies = await page.cookies()
-
     await page.$eval('#btn_cookie_accept', btn => btn.click())
+
     await page.$eval('.btn.dropdown-toggle.btn-default', btn => btn.click())
     await page.click("li[data-original-index='2']", { visible: true })
     await page.type('#SEARCH_NUMBER', this.currentContainerNo)
@@ -82,9 +82,9 @@ class OOCLService {
 
 
     // Close pages and finally close the browser
-    await secondPage.close()
-    await page.close()
-    await browser.close()
+    // await secondPage.close()
+    // await page.close()
+    // await browser.close()
   }
 }
 

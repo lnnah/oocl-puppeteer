@@ -1,0 +1,46 @@
+[
+  {
+    "name": "MyFavoriteTrackingType",
+    "value": "booking",
+    "domain": "www.oocl.com",
+    "path": "/",
+    "expires": 1601793423,
+    "size": 29,
+    "httpOnly": false,
+    "secure": false,
+    "session": false
+  },
+  {
+    "name": "AcceptCookie",
+    "value": "yes",
+    "domain": ".oocl.com",
+    "path": "/",
+    "expires": 1601793423,
+    "size": 15,
+    "httpOnly": false,
+    "secure": false,
+    "session": false
+  },
+  {
+    "name": "WSS_FullScreenMode",
+    "value": "false",
+    "domain": "www.oocl.com",
+    "path": "/",
+    "expires": -1,
+    "size": 23,
+    "httpOnly": false,
+    "secure": false,
+    "session": true
+  },
+  {
+    "name": "BIGipServerOOCL",
+    "value": "2268192402.20480.0000",
+    "domain": "www.oocl.com",
+    "path": "/",
+    "expires": -1,
+    "size": 36,
+    "httpOnly": true,
+    "secure": true,
+    "session": true
+  }
+]
