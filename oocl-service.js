@@ -57,10 +57,26 @@ class OOCLService {
     await page.click("li[data-original-index='2']", { visible: true })
     await page.type('#SEARCH_NUMBER', this.currentContainerNo)
 
-    await page.$eval('#container_btn', btn => btn.click())
+    // Listen for new windows open
     let newPagePromise = new Promise(x => browser.once('targetcreated', target => x(target.page())))
+    await page.$eval('#container_btn', btn => btn.click())
     const secondPage = await newPagePromise
-    console.log(await secondPage.content())
+    await secondPage.waitForNavigation({waitUntil: 'networkidle2'})
+    await secondPage.waitForSelector("#nc_1_n1z")
+    // Got the 2nd page
+
+    // Slide the captcha
+    const sliderElement = await secondPage.$('#nc_1_n1t')
+    const slider = await sliderElement.boundingBox()
+
+    const slideThumb = await secondPage.$('#nc_1_n1z')
+    const thumb = await slideThumb.boundingBox()
+
+    await secondPage.mouse.move(thumb.x + thumb.width / 2, thumb.y + thumb.height / 2)
+    await secondPage.mouse.down()
+    await secondPage.mouse.move(thumb.x + slider.width, thumb.y + thumb.height / 2, {steps: 10})
+    await page.mouse.up()
+    // Slided over the captcha
 
   }
 
