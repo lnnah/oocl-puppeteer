@@ -1,7 +1,7 @@
 [
   {
     "name": "BotMitigationCookie_2943835814907568976",
-    "value": "\"570531001599215338955T7w2EvtYwiwJ/j/SKg1glxaQ=\"",
+    "value": "\"381079001599218577+1RhmQMZ29xVCsLFzFqaOAUVQfM=\"",
     "domain": "moc.oocl.com",
     "path": "/",
     "expires": -1,
@@ -15,10 +15,10 @@
     "value": "yes",
     "domain": ".oocl.com",
     "path": "/",
-    "expires": 1601807334,
+    "expires": 1601810571,
     "size": 15,
     "httpOnly": false,
-    "secure": true,
+    "secure": false,
     "session": false
   },
   {
@@ -34,21 +34,21 @@
   },
   {
     "name": "JSESSIONID",
-    "value": "wPFYqYeD-vzO_vskQ7Kx_JxQZgJNxWEk0hBP0wEDwiONxVueXBkM!-1929766747",
+    "value": "iK5Y2vLkI1zEK3ibKyiS3STJD1ilELkEcTH7vOyCWXcNc78L018D!1556646874",
     "domain": "moc.oocl.com",
     "path": "/party",
     "expires": -1,
-    "size": 74,
+    "size": 73,
     "httpOnly": true,
     "secure": false,
     "session": true
   },
   {
     "name": "_uab_collina",
-    "value": "159921534329372215977907",
+    "value": "159921858073473868427827",
     "domain": "moc.oocl.com",
     "path": "/party/cargotracking",
-    "expires": 1914575343,
+    "expires": 1914578580,
     "size": 36,
     "httpOnly": false,
     "secure": false,

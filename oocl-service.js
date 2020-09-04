@@ -1,6 +1,9 @@
 const chromium = require('chrome-aws-lambda')
-
 const puppeteer = chromium.puppeteer
+const fs = require('fs').promises
+
+// const readFileAsync = fs.readFile
+const writeFileAsync = fs.writeFile
 
 class OOCLService {
   SERVICE_NAME = 'OoclService'
@@ -11,7 +14,7 @@ class OOCLService {
 
   result = []
 
-  USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.137 Safari/537.36'
+  // USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.137 Safari/537.36'
   
   MAIN_URL = 'https://www.oocl.com/eng/ourservices/eservices/cargotracking/Pages/cargotracking.aspx'
 
@@ -23,15 +26,14 @@ class OOCLService {
     for (let container of this.containers) {
       this.currentIndex++
       this.currentContainerNo = container
-      
+
       const browser = await puppeteer.launch({
         headless: false,
-        executablePath: await chromium.executablePath,
-        defaultViewport: {
-          width: 1366,
-          height: 768,
-        },
+        executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+        defaultViewport: null,
         args: chromium.args,
+        // devtools: true,
+        slowMo: 50,
       })
       await this.simulator(browser)
     }
@@ -41,11 +43,17 @@ class OOCLService {
 
   simulator = async browser => {
     const page = await browser.newPage()
+    // await page.setUserAgent(this.USER_AGENT)
     await page.setDefaultNavigationTimeout(0)
-    await page.setUserAgent(this.USER_AGENT)
     await page.goto(this.MAIN_URL)
+    await page.waitForNavigation({waitUntil: ['load', 'networkidle0']})
+    await page.waitForSelector('.btn.dropdown-toggle.btn-default')
 
-    await page.$eval('#btn_cookie_accept', btn => btn.click())
+    if (await page.$('#btn_cookie_accept'))
+      await page.$eval('#btn_cookie_accept', btn => btn.click())
+
+    this.cookies = await page.cookies()
+    await writeFileAsync('first_page_cookies.json', JSON.stringify(this.cookies, null, 2))
 
     await page.$eval('.btn.dropdown-toggle.btn-default', btn => btn.click())
     await page.click("li[data-original-index='2']", { visible: true })
@@ -55,8 +63,13 @@ class OOCLService {
     let newPagePromise = new Promise(x => browser.once('targetcreated', target => x(target.page())))
     await page.$eval('#container_btn', btn => btn.click())
     const secondPage = await newPagePromise
+
+    await secondPage.setDefaultNavigationTimeout(0)
     await secondPage.waitForNavigation({waitUntil: 'networkidle2'})
     await secondPage.waitForSelector("#nc_1_n1z")
+
+    this.cookies = await secondPage.cookies()
+    await writeFileAsync('second_page_before_slide_cookies.json', JSON.stringify(this.cookies, null, 2))
     // Got the 2nd page
 
     // Get captcha slider
@@ -70,9 +83,18 @@ class OOCLService {
     // Simulate slide captcha slider
     await secondPage.mouse.move(thumb.x + thumb.width / 2, thumb.y + thumb.height / 2)
     await secondPage.mouse.down()
-    await secondPage.mouse.move(thumb.x + slider.width, thumb.y + thumb.height / 2, {steps: 10})
-    await page.mouse.up()
+    await secondPage.mouse.move(thumb.x + slider.width, thumb.y + thumb.height / 2, {steps: 2})
+    await secondPage.mouse.up()
     // Done simulate
+
+    // Wait for captcha verify and response
+    await secondPage.waitForSelector('#ali-recaptcha > .errloading')
+
+    if (await secondPage.$('#ali-recaptcha > .errloading')) console.log('error')
+    else console.log('success')
+
+    this.cookies = await secondPage.cookies()
+    await writeFileAsync('second_page_after_slided_cookies.json', JSON.stringify(this.cookies, null, 2))
 
     /*Getting data here if captcha by passed
 
