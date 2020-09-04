@@ -34,6 +34,8 @@ class OOCLService {
       })
       await this.simulator(browser)
     }
+    // Return crawled data
+    return this.result
   }
 
   simulator = async browser => {
@@ -83,9 +85,6 @@ class OOCLService {
     await secondPage.close()
     await page.close()
     await browser.close()
-
-    // Return crawled data
-    return this.result
   }
 }
 
