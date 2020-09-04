@@ -1,0 +1,57 @@
+[
+  {
+    "name": "BotMitigationCookie_2943835814907568976",
+    "value": "\"570531001599215338955T7w2EvtYwiwJ/j/SKg1glxaQ=\"",
+    "domain": "moc.oocl.com",
+    "path": "/",
+    "expires": -1,
+    "size": 87,
+    "httpOnly": false,
+    "secure": false,
+    "session": true
+  },
+  {
+    "name": "AcceptCookie",
+    "value": "yes",
+    "domain": ".oocl.com",
+    "path": "/",
+    "expires": 1601807334,
+    "size": 15,
+    "httpOnly": false,
+    "secure": true,
+    "session": false
+  },
+  {
+    "name": "BIGipServerpool_moc_8011",
+    "value": "1804559307.19231.0000",
+    "domain": "moc.oocl.com",
+    "path": "/",
+    "expires": -1,
+    "size": 45,
+    "httpOnly": false,
+    "secure": false,
+    "session": true
+  },
+  {
+    "name": "JSESSIONID",
+    "value": "wPFYqYeD-vzO_vskQ7Kx_JxQZgJNxWEk0hBP0wEDwiONxVueXBkM!-1929766747",
+    "domain": "moc.oocl.com",
+    "path": "/party",
+    "expires": -1,
+    "size": 74,
+    "httpOnly": true,
+    "secure": false,
+    "session": true
+  },
+  {
+    "name": "_uab_collina",
+    "value": "159921534329372215977907",
+    "domain": "moc.oocl.com",
+    "path": "/party/cargotracking",
+    "expires": 1914575343,
+    "size": 36,
+    "httpOnly": false,
+    "secure": false,
+    "session": false
+  }
+]

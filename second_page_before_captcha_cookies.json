@@ -1,0 +1,13 @@
+[
+  {
+    "name": "AcceptCookie",
+    "value": "yes",
+    "domain": ".oocl.com",
+    "path": "/",
+    "expires": 1601807334,
+    "size": 15,
+    "httpOnly": false,
+    "secure": true,
+    "session": false
+  }
+]
