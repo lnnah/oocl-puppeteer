@@ -1,14 +1,15 @@
-'use strict'
+(async () => {
+  'use strict'
+  const OOCLService = require('./oocl-service')
 
-const OOCLService = require('./oocl-service')
-
-
-try {
-  const _ooclService = new OOCLService(['OOLU0571619', 'FCIU5229601'])
-  _ooclService.run()
-} catch (error) {
-  console.log(error)
-}
+  try {
+    const _ooclService = new OOCLService(['OOLU0571619'])
+    const result = await _ooclService.run()
+    console.log(result)
+  } catch (error) {
+    console.log(error)
+  }
+})()
 
 // module.exports.index = async (event, context) => {
 
