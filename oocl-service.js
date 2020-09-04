@@ -32,11 +32,11 @@ class OOCLService {
         },
         args: chromium.args,
       })
-      await this.requestFirstPage(browser)
+      await this.simulator(browser)
     }
   }
 
-  requestFirstPage = async browser => {
+  simulator = async browser => {
     const page = await browser.newPage()
     await page.setDefaultNavigationTimeout(0)
     await page.setUserAgent(this.USER_AGENT)
@@ -77,31 +77,16 @@ class OOCLService {
       ...do something
 
     End getting data*/
-    
+
 
     // Close pages and finally close the browser
     await secondPage.close()
     await page.close()
     await browser.close()
 
+    // Return crawled data
+    return this.result
   }
-
-  interceptor = async (page, body = {}) => {
-    await page.setRequestInterception(true)
-
-    page.on('request', request => {
-        const headers = request.headers()
-        const data = {
-          ...body,
-          headers: {
-            ...headers,
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
-        }
-        request.continue(data)
-    })
-  }
-
 }
 
 module.exports = OOCLService
