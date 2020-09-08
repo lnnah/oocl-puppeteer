@@ -17,11 +17,11 @@ class OOCLService {
       executablePath: await chromium.executablePath,
       defaultViewport: null,
       args: chromium.args,
-      slowMo: 500,
+      slowMo: 300,
     })
 
     await this.simulator(browser)
-    // await browser.close()
+    await browser.close()
 
     return this.result
   }
@@ -54,7 +54,7 @@ class OOCLService {
         return Object.assign(this.result, {
           container_number: this.container,
           crawl_success: false,
-          message: `${this.currentContainerNo} not found!`
+          message: `${this.container} not found!`
         })
       }
 
@@ -88,7 +88,7 @@ class OOCLService {
     const event_at = await html.$eval('#form\\:eventDate0', elm => elm.innerText)
 
     const info = {
-      success: true,
+      crawl_success: true,
       container_number: this.container,
       vessel_name: extractedInfo[1][4].column.trim().split('\n')[0].trim(),
       voyage_name: extractedInfo[1][4].column.trim().split('\n')[1].trim(),
@@ -136,7 +136,7 @@ class OOCLService {
   }
 
   isAfter = (start, end) => {
-    
+
   }
 
 
