@@ -56,6 +56,7 @@ class OOCLService {
 
       if (!isVerified) {
         console.log("CAPTCHA STILL VERIFIED WITH FAILURE!\n")
+        console.log("EXIT!\n")
         return Object.assign(this.result, {
           container_number: this.container,
           crawl_success: false,
@@ -189,9 +190,9 @@ class OOCLService {
     const resRequesVerify = await requesVerify.text()
     console.log("CAPTCHA VERIFY RESPONSE:\n")
     console.log(resRequesVerify + "\n")
-    if (resRequesVerify.includes('"code":300"') || resRequesVerify.includes('"value":"block"'))
-      return false
-    return true
+    if (resRequesVerify.includes('"code":0'))
+      return true
+    return false
   }
 }
 
