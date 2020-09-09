@@ -15,7 +15,7 @@ class OOCLService {
 
   run = async () => {
     const browser = await puppeteer.launch({
-      headless: true,
+      headless: false,
       executablePath: await chromium.executablePath,
       defaultViewport: null,
       args: chromium.args,
