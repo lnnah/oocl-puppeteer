@@ -5,6 +5,7 @@ class OOCLService {
   result = {}
   USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.137 Safari/537.36'
   MAIN_URL = 'https://moc.oocl.com/party/cargotracking/ct_search_from_other_domain.jsf?ANONYMOUS_BEHAVIOR=BUILD_UP&domainName=PARTY_DOMAIN&ENTRY_TYPE=OOCL&ENTRY=MCC&ctSearchType=CNTR&ctShipmentNumber=${cntr}'
+  VERIFY_URL = 'https://cf.aliyun.com/nocaptcha/analyze.jsonp'
 
   constructor(container) {
     this.container = container
@@ -17,11 +18,11 @@ class OOCLService {
       executablePath: await chromium.executablePath,
       defaultViewport: null,
       args: chromium.args,
-      slowMo: 300,
+      devtools: true,
     })
 
     await this.simulator(browser)
-    await browser.close()
+    // await browser.close()
 
     return this.result
   }
@@ -30,15 +31,39 @@ class OOCLService {
     try {
       const page = await browser.newPage()
       await page.setUserAgent(this.USER_AGENT)
+      await page.setDefaultNavigationTimeout(40000)
 
+      console.log("START CRAWLING!\n")
       await page.goto(this.MAIN_URL.replace('${cntr}', this.container))
 
+      console.log("WAITING FOR NETWORK IDLE!\n")
       await page.waitForNavigation({waitUntil: ['load', 'networkidle2']})
       await page.waitForSelector("#nc_1_n1z")
 
+      console.log("WAITING FOR 4s BEFORE SLIDE CAPTCHA!\n")
+      await page.waitFor(4000)
       await this.bypassCaptcha(page)
 
-      await page.waitForNavigation({waitUntil: 'networkidle0'})
+      let isVerified = true
+
+      console.log("WAITING FOR CAPTCHA VERIFY!\n")
+      await page.waitForResponse(async (response) => {
+        const url = response.url()
+        if (url.includes(this.VERIFY_URL)) {
+          const data = await response.text()
+          if (data.includes('"code:300"') || data.includes('"value":"block"')) {
+            isVerified = false
+          }
+        }
+      })
+
+      if (isVerified) {
+        console.log("CAPTCHA BY PASSED!\n")
+        console.log("WAITING FOR NETWORK IDLE IN FINAL PAGE!\n")
+        await page.waitForNavigation({waitUntil: 'networkidle0'})
+      } else {
+        console.log("CAPTCHA VERIFIED FAILED!\n")
+      }
 
       let bodyHTML = await page.evaluate(() => document.body.innerHTML)
 
@@ -58,8 +83,11 @@ class OOCLService {
         })
       }
 
+      console.log("START EXTRACTING CONTAINER INFOMATION!\n")
       await this.extractInfo(page)
+      console.log("START EXTRACTING CONTAINER HISTORIES!\n")
       await this.extractHistories(page)
+      console.log("DONE!")
 
     } catch (error) {
       return Object.assign(this.result, {
@@ -82,6 +110,20 @@ class OOCLService {
       })
     })
 
+    const routes = []
+
+    extractedInfo.forEach((row, i) => {
+      if (i === 0) return
+      routes.push({
+        vessel_name: row[4].column.trim().split('\n')[0].trim(),
+        voyage_name: row[4].column.trim().split('\n')[1].trim(),
+        pol_name: row[3].spans[0],
+        pol_eta: row[3].spans[1],
+        pod_name: row[5].spans[0],
+        pod_eta: row[5].spans[1],
+      })
+    })
+
     const current_port = await html.$eval('#form\\:eventLocation0', elm => elm.innerText)
     const current_status = await html.$eval('#summaryTable > tbody > tr:nth-child(3) > td:nth-child(6)', elm => elm.innerText)
     const eta = await html.$eval('#form\\:arrivalDate0', elm => elm.innerText)
@@ -90,10 +132,7 @@ class OOCLService {
     const info = {
       crawl_success: true,
       container_number: this.container,
-      vessel_name: extractedInfo[1][4].column.trim().split('\n')[0].trim(),
-      voyage_name: extractedInfo[1][4].column.trim().split('\n')[1].trim(),
-      pol_name: extractedInfo[1][3].spans[0],
-      pod_name: extractedInfo[1][5].spans[0],
+      routes: routes,
       event_at: event_at,
       eta: eta,
       current_status: current_status,
@@ -115,6 +154,7 @@ class OOCLService {
       if (i === 0) return
       con_histories.push({
         status: row[0].trim().replace(/\s+/g, ' ').trim(),
+        facility: row[1].trim().replace(/\s+/g, ' ').trim(),
         port_name: row[2].trim().replace(/\s+/g, ' ').trim(),
         event_at: row[4].trim().replace(/\s+/g, ' ').trim(),
       })
@@ -134,12 +174,6 @@ class OOCLService {
     await page.mouse.move(thumb.x + slider.width, thumb.y + thumb.height / 2, {steps: 2})
     await page.mouse.up()
   }
-
-  isAfter = (start, end) => {
-
-  }
-
-
 }
 
 
