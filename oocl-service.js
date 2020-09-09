@@ -6,6 +6,7 @@ class OOCLService {
   USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.137 Safari/537.36'
   MAIN_URL = 'https://moc.oocl.com/party/cargotracking/ct_search_from_other_domain.jsf?ANONYMOUS_BEHAVIOR=BUILD_UP&domainName=PARTY_DOMAIN&ENTRY_TYPE=OOCL&ENTRY=MCC&ctSearchType=CNTR&ctShipmentNumber=${cntr}'
   VERIFY_URL = 'https://cf.aliyun.com/nocaptcha/analyze.jsonp'
+  MAX_RETRY = 3
 
   constructor(container) {
     this.container = container
@@ -14,15 +15,14 @@ class OOCLService {
 
   run = async () => {
     const browser = await puppeteer.launch({
-      headless: false,
+      headless: true,
       executablePath: await chromium.executablePath,
       defaultViewport: null,
       args: chromium.args,
-      devtools: true,
     })
 
     await this.simulator(browser)
-    // await browser.close()
+    await browser.close()
 
     return this.result
   }
@@ -31,43 +31,31 @@ class OOCLService {
     try {
       const page = await browser.newPage()
       await page.setUserAgent(this.USER_AGENT)
-      await page.setDefaultNavigationTimeout(40000)
+      await page.setDefaultNavigationTimeout(30000)
 
       console.log("START CRAWLING!\n")
       await page.goto(this.MAIN_URL.replace('${cntr}', this.container))
 
       console.log("WAITING FOR NETWORK IDLE!\n")
       await page.waitForNavigation({waitUntil: ['load', 'networkidle2']})
-      await page.waitForSelector("#nc_1_n1z")
 
-      console.log("WAITING FOR 4s BEFORE SLIDE CAPTCHA!\n")
-      await page.waitFor(4000)
       await this.bypassCaptcha(page)
-
-      let isVerified = true
-
-      console.log("WAITING FOR CAPTCHA VERIFY!\n")
-      await page.waitForResponse(async (response) => {
-        const url = response.url()
-        if (url.includes(this.VERIFY_URL)) {
-          const data = await response.text()
-          if (data.includes('"code:300"') || data.includes('"value":"block"')) {
-            isVerified = false
-          }
-        }
-      })
-
-      if (isVerified) {
-        console.log("CAPTCHA BY PASSED!\n")
-        console.log("WAITING FOR NETWORK IDLE IN FINAL PAGE!\n")
-        await page.waitForNavigation({waitUntil: 'networkidle0'})
-      } else {
-        console.log("CAPTCHA VERIFIED FAILED!\n")
+      
+      let isVerified = await this.waitForCaptchaResponse(page)
+      let retry = this.MAX_RETRY
+      
+      while(!isVerified && retry-- > 0) {
+        if (isVerified) break
+        console.log("CAPTCHA VERIFIED WITH FAILURE!\n")
+        console.log(`TRY AGAIN! RETRY REMAIN ${retry}\n`)
+        console.log("WAITING FOR PAGE RELOAD DONE!\n")
+        await page.reload({waitUntil: ['load', 'networkidle2']})
+        await this.bypassCaptcha(page)
+        isVerified = await this.waitForCaptchaResponse(page)
       }
 
-      let bodyHTML = await page.evaluate(() => document.body.innerHTML)
-
-      if (bodyHTML.includes('errloading')) {
+      if (!isVerified) {
+        console.log("CAPTCHA STILL VERIFIED WITH FAILURE!\n")
         return Object.assign(this.result, {
           container_number: this.container,
           crawl_success: false,
@@ -75,6 +63,15 @@ class OOCLService {
         })
       }
 
+      console.log("CAPTCHA VERIFIED WITH SUCCESS!\n")
+      console.log("WAITING FOR NETWORK IDLE IN FINAL PAGE!\n")
+      await page.waitForNavigation({waitUntil: 'networkidle0'})
+
+      console.log('START TO GET DOCUMENT BODY!\n')
+      let bodyHTML = await page.evaluate(() => document.body.innerHTML)
+      console.log('GOT DOCUMENT BODY!\n')
+
+      console.log("START TO CHECK IF RECORD FOUND!\n")
       if (bodyHTML.includes('No records were found.')) {
         return Object.assign(this.result, {
           container_number: this.container,
@@ -82,10 +79,12 @@ class OOCLService {
           message: `${this.container} not found!`
         })
       }
-
-      console.log("START EXTRACTING CONTAINER INFOMATION!\n")
+      
+      console.log(`FOUND ${this.container}!\n`)
+      console.log("START TO EXTRACT CONTAINER INFOMATION!\n")
       await this.extractInfo(page)
-      console.log("START EXTRACTING CONTAINER HISTORIES!\n")
+
+      console.log("START TO EXTRACT CONTAINER HISTORIES!\n")
       await this.extractHistories(page)
       console.log("DONE!")
 
@@ -163,6 +162,9 @@ class OOCLService {
   }
 
   bypassCaptcha = async page => {
+    await page.waitForSelector("#nc_1_n1z")
+    console.log("WAITING FOR 4s BEFORE SLIDE CAPTCHA!\n")
+    await page.waitFor(4000)
     const sliderElement = await page.$('#nc_1_n1t')
     const slider = await sliderElement.boundingBox()
 
@@ -174,7 +176,23 @@ class OOCLService {
     await page.mouse.move(thumb.x + slider.width, thumb.y + thumb.height / 2, {steps: 2})
     await page.mouse.up()
   }
-}
 
+  waitForCaptchaResponse = async page => {
+    console.log("WAITING FOR CAPTCHA VERIFY!\n")
+    const requesVerify = await page.waitForResponse(async (response) => {
+      const url = response.url()
+      if (url.includes(this.VERIFY_URL)) {
+        return true
+      }
+      return false
+    })
+    const resRequesVerify = await requesVerify.text()
+    console.log("CAPTCHA VERIFY RESPONSE:\n")
+    console.log(resRequesVerify + "\n")
+    if (resRequesVerify.includes('"code":300"') || resRequesVerify.includes('"value":"block"'))
+      return false
+    return true
+  }
+}
 
 module.exports = OOCLService
